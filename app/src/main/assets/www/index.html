@@ -14,6 +14,8 @@
         rel="stylesheet">
     <script>if(window.GlassBridge)document.documentElement.classList.add('glass-native');</script>
     <link rel="stylesheet" href="style.css">
+    <!-- 곡 행(대기열/플레이리스트) 디자인 통일 + 재생 하이라이트 + 플레이리스트 edit 상태 (style.css 뒤에 로드) -->
+    <link rel="stylesheet" href="pl-edit.css">
     <!-- ═══════════════════════════════════════════════════════════════════════
          BACKGROUND PLAYBACK — Page Visibility API complete override
          MUST be placed BEFORE the YouTube IFrame API script.
@@ -670,6 +672,8 @@
     <script src="glass-bridge.js"></script>
     <!-- Swipe Nav: iOS 스타일 좌우 스와이프 메뉴 전환 (기존 gv() 라우팅을 그대로 호출, app.js 수정 없음) -->
     <script src="swipe-nav.js"></script>
+    <!-- Playlist Edit: 곡 롱프레스 edit · 컨텍스트 메뉴(네이티브 Liquid Glass) · 드래그 순서 변경 (app.js 수정 없음) -->
+    <script src="pl-edit.js"></script>
 
     <!-- AndroidBridge 준비 후 홈 화면(애플뮤직 스타일) 로드 -->
     <script>
