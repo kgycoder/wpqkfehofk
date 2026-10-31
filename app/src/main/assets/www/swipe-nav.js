@@ -36,6 +36,7 @@
         if (!target || !target.closest) return true;
         if (target.closest('#np,#bar,#mob-nav,#toast,.sug-drop,#pl-ctx-menu,input,textarea,select')) return true;
         if (root.classList.contains('np-open')) return true;
+        if (root.classList.contains('pl-editing')) return true;    // 플레이리스트 곡 edit 중: 페이지 스와이프 금지
         const np = document.getElementById('np');
         if (np && np.classList.contains('on')) return true;
         if (document.querySelector('#pl-ctx-menu.on,#pl-dialog-overlay.on,#pl-confirm-overlay.on,#pl-add-modal-overlay.on')) return true;
@@ -249,6 +250,7 @@
 
     document.addEventListener('touchmove', e => {
         if (!st || animating) return;
+        if (root.classList.contains('pl-editing')) { if (st.locked === 'x') settle(false); else st = null; return; }   // 롱프레스로 edit 에 진입한 같은 제스처
         if (e.touches.length !== 1) { if (st.locked === 'x') settle(false); else st = null; return; }
         const t = e.touches[0];
         const dx = t.clientX - st.x0, dy = t.clientY - st.y0;
