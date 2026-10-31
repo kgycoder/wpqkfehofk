@@ -71,6 +71,7 @@ fun GlassRoot(webView: WebView, c: GlassController) {
             s.search2?.let { SearchGlass(it, backdrop, c) { c.swipeDx2 } }
         }
         s.ctx?.let { ContextMenuGlass(it, backdrop, c) }
+        s.tedit?.let { TrackEditMenuGlass(it, backdrop, c) }
         s.dialog?.let { DialogGlass(it, backdrop, c) }
         s.confirm?.let { ConfirmGlass(it, backdrop, c) }
         s.add?.let { AddModalGlass(it, backdrop, c) }
@@ -156,7 +157,7 @@ internal class RegionRecorder(private val c: GlassController) {
         val pad = PAD_DP * d
         val rects = listOfNotNull(
             s.nav?.rect, s.bar?.rect, s.search?.let { it.rect.copy(x = it.rect.x + dx, y = maxOf(it.pin, it.rect.y - scroll)) },
-            s.search2?.let { it.rect.copy(x = it.rect.x + dx2, y = maxOf(it.pin, it.rect.y - scroll)) }, s.ctx?.rect, s.dialog?.rect, s.confirm?.rect, s.add?.rect
+            s.search2?.let { it.rect.copy(x = it.rect.x + dx2, y = maxOf(it.pin, it.rect.y - scroll)) }, s.ctx?.rect, s.tedit?.menuRect(), s.dialog?.rect, s.confirm?.rect, s.add?.rect
         )
         if (rects.isEmpty()) return null
         return Path().apply {
