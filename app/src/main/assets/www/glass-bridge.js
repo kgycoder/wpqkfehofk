@@ -150,6 +150,10 @@
             };
         }
 
+        /* 플레이리스트 곡 edit 상태의 컨텍스트 메뉴 (pl-edit.js 가 상태를 제공 — 없으면 null) */
+        const te = window.__plEdit ? window.__plEdit.glass() : null;
+        if (te) st.te = te;
+
         /* 이름 입력 다이얼로그 */
         if ($('pl-dialog-overlay') && $('pl-dialog-overlay').classList.contains('on')) {
             const d = $('pl-dialog'), inp = $('pl-dialog-input');
@@ -314,6 +318,7 @@
                     }
                     break;
                 }
+                case 'tedit': if (window.__plEdit) window.__plEdit.action(c.a); break;
                 case 'dlg': if (c.a === 'ok') plDialogConfirm(); else plDialogCancel(); break;
                 case 'cfm': if (c.a === 'ok') plConfirmOk(); else plConfirmCancel(); break;
                 case 'add': {
