@@ -1,0 +1,268 @@
+/* ════════════════════════════════════════════════════════════════════
+   TRACK ROWS  (대기열 .lcard · 플레이리스트 .pl-track) — SYNC 카드 디자인과 통일
+   + 현재 재생 곡 하이라이트 전면 개편 + 플레이리스트 edit 상태
+   (style.css 뒤에 로드되어 해당 규칙만 덮어쓴다. 다른 화면/로직은 건드리지 않는다.)
+════════════════════════════════════════════════════════════════════ */
+:root {
+    --trk-ease: cubic-bezier(.2, .85, .25, 1);
+}
+
+/* ── 공통 행: .card 와 같은 글래스 면 / 테두리 / 라운드 ── */
+.lcard,
+.pl-track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 9px 14px 9px 10px;
+    margin: 0 0 6px;
+    border-radius: 16px;
+    background: var(--glass);
+    border: 1px solid var(--glass-bd);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    transition: background .25s var(--ease), border-color .25s var(--ease), box-shadow .3s var(--ease), opacity .25s var(--ease), scale .22s var(--trk-ease);
+}
+
+    .lcard:hover,
+    .pl-track:hover {
+        background: var(--glass-md);
+    }
+
+    .lcard:active,
+    .pl-track:not(.editing):active {
+        scale: .985;
+    }
+
+.lcard-art,
+.pl-track-art {
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--glass-md);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+
+.lcard-n,
+.pl-track-num {
+    flex: 0 0 20px;
+    min-width: 20px;
+    width: 20px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--t4);
+}
+
+.lcard-m,
+.pl-track-m {
+    flex: 1;
+    min-width: 0;
+}
+
+.lcard-t,
+.pl-track-t {
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: -.1px;
+    color: var(--t1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lcard-c,
+.pl-track-c {
+    margin-top: 2px;
+    font-size: 11.5px;
+    color: var(--t3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lcard-d,
+.pl-track-dur {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--t3);
+}
+
+/* 이전의 끝 부분 ▶ 아이콘은 이퀄라이저로 대체 */
+.lcard > svg {
+    display: none;
+}
+
+/* ── 현재 재생 곡: 박스 글로우 없이 "은은한 틴트 + 가는 테두리 + 번호 자리의 이퀄라이저" ── */
+.lcard.playing,
+.pl-track.playing {
+    background: rgba(250, 45, 90, .10);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 16%, transparent) 0%, var(--glass) 78%);
+    border-color: rgba(250, 45, 90, .28);
+    border-color: color-mix(in srgb, var(--acc) 30%, transparent);
+    box-shadow: none;
+}
+
+    .lcard.playing .lcard-c,
+    .pl-track.playing .pl-track-c {
+        color: var(--t2);
+    }
+
+    .lcard.playing .lcard-n,
+    .pl-track.playing .pl-track-num {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        height: 14px;
+        font-size: 0;
+        color: transparent;
+    }
+
+        .lcard.playing .lcard-n::before,
+        .pl-track.playing .pl-track-num::before {
+            content: '';
+            display: block;
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+            background: linear-gradient(var(--acc), var(--acc)) 0 100% / 3px 45% no-repeat, linear-gradient(var(--acc), var(--acc)) 50% 100% / 3px 100% no-repeat, linear-gradient(var(--acc), var(--acc)) 100% 100% / 3px 70% no-repeat;
+            animation: trkEq 1s ease-in-out infinite;
+        }
+
+html.eq-paused .lcard.playing .lcard-n::before,
+html.eq-paused .pl-track.playing .pl-track-num::before {
+    animation-play-state: paused;
+}
+
+@keyframes trkEq {
+    0%, 100% {
+        background-size: 3px 45%, 3px 100%, 3px 70%;
+    }
+
+    33% {
+        background-size: 3px 100%, 3px 40%, 3px 55%;
+    }
+
+    66% {
+        background-size: 3px 60%, 3px 85%, 3px 100%;
+    }
+}
+
+/* ── 플레이리스트 행: 위치(translateY)와 크기(scale)를 분리해 드래그 중에도 크기 전환이 부드럽다 ── */
+.pl-track {
+    transform: translate3d(0, var(--dy, 0px), 0);
+    transition: transform .34s var(--trk-ease), scale .34s var(--spring), background .25s var(--ease), border-color .25s var(--ease), box-shadow .3s var(--ease), opacity .25s var(--ease);
+}
+
+/* 터치 기기에서는 곡 삭제가 컨텍스트 메뉴로 이동했으므로 행의 ✕ 버튼은 숨긴다 */
+@media (hover: none) {
+    .pl-track-del {
+        display: none;
+    }
+}
+
+/* ── edit 상태: 살짝 커지고 하이라이트 ── */
+#pl-track-list.is-editing .pl-track {
+    will-change: transform;
+}
+
+    #pl-track-list.is-editing .pl-track:not(.editing) {
+        opacity: .55;
+    }
+
+.pl-track.editing {
+    scale: 1.04;
+    z-index: 4;
+    background: rgba(255, 255, 255, .13);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--acc) 24%, rgba(255, 255, 255, .08)) 0%, rgba(255, 255, 255, .12) 100%);
+    border-color: var(--acc);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .55), 0 0 0 1px var(--acc);
+}
+
+    .pl-track.editing .pl-track-art {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, .5);
+    }
+
+/* 드래그 중: 위치는 손가락을 즉시 따라가고(트랜지션 없음), 크기/그림자만 부드럽게 */
+.pl-track.dragging {
+    scale: 1.06;
+    z-index: 10;
+    box-shadow: 0 24px 52px rgba(0, 0, 0, .65), 0 0 0 1px var(--acc);
+    transition: scale .22s var(--spring), box-shadow .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+}
+
+#pl-track-list.no-anim .pl-track {
+    transition: none !important;
+}
+
+/* 삭제: 접히며 사라지고 아래 곡들이 자연스럽게 올라온다 */
+.pl-track.removing {
+    height: 0;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(-28px, 0, 0);
+    transition: height .3s var(--ease), min-height .3s var(--ease), padding .3s var(--ease), margin .3s var(--ease), border-width .3s var(--ease), opacity .22s var(--ease), transform .3s var(--ease) !important;
+}
+
+/* ── 브라우저 단독 실행용 폴백 컨텍스트 메뉴 (앱에서는 네이티브 Liquid Glass 가 그린다) ── */
+#pl-edit-menu {
+    position: fixed;
+    z-index: 790;
+    width: 212px;
+    padding: 6px;
+    display: none;
+    border-radius: 26px;
+    background: rgba(18, 18, 18, .55);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(24px) saturate(1.6);
+    border: 1px solid var(--glass-bd-hi);
+    box-shadow: 0 20px 56px rgba(0, 0, 0, .6);
+}
+
+    #pl-edit-menu.on {
+        display: block;
+        animation: vIn .18s var(--ease) both;
+    }
+
+    #pl-edit-menu button {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        height: 50px;
+        padding: 0 16px;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--t1);
+        text-align: left;
+        transition: background .12s;
+    }
+
+        #pl-edit-menu button:active {
+            background: rgba(255, 255, 255, .14);
+        }
+
+        #pl-edit-menu button.on svg {
+            fill: var(--acc);
+            stroke: var(--acc);
+        }
+
+        #pl-edit-menu button.danger {
+            color: #ff453a;
+        }
+
+html.glass-native #pl-edit-menu {
+    display: none !important;
+}
