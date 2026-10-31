@@ -34,6 +34,27 @@ data class CssRect(val x: Float, val y: Float, val w: Float, val h: Float)
     val focused: Boolean, val hint: String?, val rows: List<AddRow>
 )
 
+/** 플레이리스트 곡 edit 상태: 편집 중인 행의 위치(CSS px) + 컨텍스트 메뉴 라벨. 메뉴 위치는 행 기준으로 여기서 계산한다. */
+@Immutable
+data class TrackEditState(
+    val rect: CssRect, val viewportH: Float, val dragging: Boolean, val closing: Boolean,
+    val fav: Boolean, val favLabel: String, val delLabel: String
+) {
+    /** 행의 오른쪽 아래(공간이 없으면 위)에 붙는 메뉴 영역. glass-bridge/pl-edit.js 의 폴백 메뉴와 같은 규칙. */
+    fun menuRect(): CssRect {
+        val gap = 10f
+        val x = (rect.x + rect.w - MENU_W - 14f).coerceAtLeast(10f)
+        val below = rect.y + rect.h + gap
+        val y = if (below + MENU_H <= viewportH - 150f) below else (rect.y - gap - MENU_H).coerceAtLeast(10f)
+        return CssRect(x, y, MENU_W, MENU_H)
+    }
+
+    companion object {
+        const val MENU_W = 212f
+        const val MENU_H = 114f
+    }
+}
+
 @Immutable
 data class GlassState(
     val accent: Long = 0xFFFA2D5AL,
@@ -47,7 +68,8 @@ data class GlassState(
     val ctx: CtxState? = null,
     val dialog: DialogState? = null,
     val confirm: ConfirmState? = null,
-    val add: AddModalState? = null
+    val add: AddModalState? = null,
+    val tedit: TrackEditState? = null
 ) {
     companion object {
         fun parse(json: String): GlassState {
@@ -73,6 +95,10 @@ data class GlassState(
                 confirm = o.optJSONObject("cfm")?.let {
                     ConfirmState(rect(it), it.optString("title"), it.optString("msg"),
                         it.optString("ok"), it.optString("cancel"))
+                },
+                tedit = o.optJSONObject("te")?.let {
+                    TrackEditState(rect(it), it.optDouble("vh", 800.0).toFloat(), it.optInt("dr", 0) == 1,
+                        it.optInt("cl", 0) == 1, it.optInt("fav", 0) == 1, it.optString("fl"), it.optString("dl"))
                 },
                 add = o.optJSONObject("add")?.let { a ->
                     val rows = a.optJSONArray("rows")
